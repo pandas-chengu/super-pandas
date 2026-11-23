@@ -172,6 +172,22 @@ const INSULTS = [
   { zh: '痴仔！', py: 'Chī zǎi!', en: 'You idiot!' }
 ];
 
+/* What the pet shouts in the catch game from its third rock on: it is always
+   the player's fault. Rotated the same way as the insults. */
+const BLAMES = [
+  { zh: '都怪你！', py: 'Dōu guài nǐ!', en: "It's all your fault!" },
+  { zh: '你咋个搞的嘛！', py: 'Nǐ zǎ gè gǎo de ma!', en: 'What the hell are you playing at!' },
+  { zh: '你眼睛长起出气的嗦？', py: 'Nǐ yǎn jīng zhǎng qǐ chū qì de suo?', en: 'Are your eyes just there for breathing?' },
+  { zh: '痛死老子了！', py: 'Tòng sǐ lǎo zi le!', en: 'That bloody hurt!' },
+  { zh: '你会不会玩哦！', py: 'Nǐ huì bù huì wán o!', en: 'Do you even know how to play!' },
+  { zh: '又砸到我脑壳了！', py: 'Yòu zá dào wǒ nǎo ké le!', en: "You've hit me on the head again!" },
+  { zh: '你故意的嗦？', py: 'Nǐ gù yì de suo?', en: "You're doing this on purpose, aren't you?" },
+  { zh: '搞啥子名堂哦！', py: 'Gǎo shá zi míng táng o!', en: 'What kind of bloody nonsense is this!' },
+  { zh: '石头你都看不到？', py: 'Shí tou nǐ dōu kàn bù dào?', en: "Can't you even see a rock?" },
+  { zh: '让你接零食，不是接石头！', py: 'Ràng nǐ jiē líng shí, bù shì jiē shí tou!', en: 'I said catch snacks, not rocks!' }
+];
+const BLAME_FROM = 3; // rocks in one round before the pet starts blaming you
+
 /* {v} is the animal's own noise, {food} and {n} and {t} are filled in. */
 const LINES = {
   pat: { zh: ['{v}～好舒服呀！', '{v}！再摸摸嘛～', '嘿嘿，喜欢你～'], en: ['{v}~ That feels so nice!', '{v}! More pats, please~', 'Hehe, I like you~'] },
@@ -190,6 +206,7 @@ const LINES = {
   greet: { zh: ['{v}！你回来啦！'], en: ["{v}! You're back!"] },
   greetLong: { zh: ['你去哪儿了？我等了{t}！'], en: ['Where were you? I waited {t}!'] },
   gameEnd: { zh: ['接到 {n} 个！太开心啦！'], en: ['Caught {n}! So much fun!'] },
+  gameBruised: { zh: ['接到 {n} 个…可被石头砸了 {m} 次！'], en: ['Caught {n}… and got hit by {m} rocks!'] },
   gameNone: { zh: ['一个都没接到…'], en: ["Didn't catch a thing…"] },
   room: { zh: ['{room} 到啦！'], en: ['Welcome to {room}!'] }
 };
@@ -357,28 +374,40 @@ function showToast(msg) {
   el._t = setTimeout(() => el.classList.add('hidden'), 2400);
 }
 
-let insultBag = [];
-let lastInsult = null;
-
-function nextInsult() {
-  if (!insultBag.length) {
-    insultBag = INSULTS.slice();
-    for (let i = insultBag.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [insultBag[i], insultBag[j]] = [insultBag[j], insultBag[i]];
+/* Deals a list out in random order, each entry once before any comes round again. */
+function rotation(list) {
+  let bag = [];
+  let last = null;
+  return () => {
+    if (!bag.length) {
+      bag = list.slice();
+      for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+      // The first of a new round is never the last of the old one.
+      if (bag[bag.length - 1] === last) bag.reverse();
     }
-    // The first of a new round is never the last of the old one.
-    if (insultBag[insultBag.length - 1] === lastInsult) insultBag.reverse();
-  }
-  lastInsult = insultBag.pop();
-  return lastInsult;
+    last = bag.pop();
+    return last;
+  };
 }
+
+const nextInsult = rotation(INSULTS);
+const nextBlame = rotation(BLAMES);
 
 function insult() {
   const i = nextInsult();
   setAnim('rant', 0.7);
   bubble(i.zh, isZh() ? '' : `${i.py} · ${i.en}`, true, 3200);
   nextMutterAt = performance.now() + 9000 + Math.random() * 6000;
+}
+
+/* Shouted mid-game, so it is gone sooner than an insult. */
+function blame() {
+  const b = nextBlame();
+  game.blameUntil = T + 1.2;
+  bubble(b.zh, isZh() ? '' : `${b.py} · ${b.en}`, true, 1900);
 }
 
 const annoyed = pet => pet.annoy >= ANNOYED;
@@ -553,7 +582,7 @@ let game = null;
 
 function startGame() {
   const pet = cur();
-  game = { t: GAME_SECONDS, score: 0, caught: 0, items: [], x: LW / 2, tx: LW / 2, spawn: 0.6, stun: 0 };
+  game = { t: GAME_SECONDS, score: 0, caught: 0, rocks: 0, blameUntil: 0, items: [], x: LW / 2, tx: LW / 2, spawn: 0.6, stun: 0 };
   document.body.classList.add('playing');
   $('game-hud').classList.remove('hidden');
   updateHud();
@@ -597,7 +626,9 @@ function gameStep(dt) {
       } else {
         g.score = Math.max(0, g.score + it.worth);
         g.stun = 0.6;
+        g.rocks += 1;
         spawnPart('cross', g.x, FEET - 42);
+        if (g.rocks >= BLAME_FROM) blame();
       }
     } else if (it.y > LH) {
       g.items.splice(i, 1);
@@ -624,7 +655,9 @@ function endGame() {
   goalTick('game');
   setAnim('cheer', 1.2);
   burst('star', 5);
-  respondSoothed(pet, wasAnnoyed, g.caught ? line('gameEnd', { n: g.caught }) : line('gameNone'));
+  const verdict = g.rocks >= BLAME_FROM ? line('gameBruised', { n: g.caught, m: g.rocks })
+    : g.caught ? line('gameEnd', { n: g.caught }) : line('gameNone');
+  respondSoothed(pet, wasAnnoyed, verdict);
   refresh();
 }
 
@@ -1360,7 +1393,9 @@ function frame(now) {
     for (const it of g.items) drawIcon(it.kind, it.x - 8, it.y);
     const moving = Math.abs(g.tx - g.x) > 1;
     drawPet(g.x, FEET, sp, pet, g.stun > 0
-      ? { eyes: 'dizzy', mouth: 'frown', shake: Math.round(Math.sin(T * 40) * 2) }
+      ? { eyes: 'dizzy', mouth: 'frown', shake: Math.round(Math.sin(T * 40) * 2), vein: T < g.blameUntil }
+      : T < g.blameUntil
+      ? { eyes: 'angry', mouth: 'open', vein: true, shake: Math.round(Math.sin(T * 50) * 1.5) }
       : { eyes: 'open', mouth: 'open', armsUp: true, wag: true, bob: moving && Math.floor(T * 10) % 2 ? -1 : 0 });
   } else {
     const f = poseOf(pet);
