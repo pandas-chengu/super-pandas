@@ -6,642 +6,154 @@
   <title>Pixel Paws · 像素电子宠物陪伴系统</title>
 
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Pixel Paws" />
   <meta name="theme-color" content="#FDF8F0" />
   <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
   <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png" />
   <link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root {
-      --bg-cream: #FDF8F0;
-      --card-cream: #FFFDF9;
-      --warm-wood: #5C4B51;
-      --warm-wood-light: #8C737B;
-      --shadow-wood: rgba(92, 75, 81, 0.16);
-    }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-    body {
-      margin: 0;
-      padding: env(safe-area-inset-top) 10px calc(16px + env(safe-area-inset-bottom)) 10px;
-      background-color: var(--bg-cream);
-      background-image: radial-gradient(#E8DEC8 1.5px, transparent 1.5px), radial-gradient(#E8DEC8 1.5px, var(--bg-cream) 1.5px);
-      background-size: 28px 28px;
-      background-position: 0 0, 14px 14px;
-      color: var(--warm-wood);
-      font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      overflow-x: hidden;
-      min-height: 100vh;
-    }
-    .font-pixel-en { font-family: 'Press Start 2P', 'Courier New', monospace; letter-spacing: 0.5px; }
-    .pixel-card {
-      background: var(--card-cream);
-      border: 3px solid var(--warm-wood);
-      border-radius: 16px;
-      box-shadow: 0 4px 0 var(--warm-wood), 0 8px 18px var(--shadow-wood);
-    }
-    .pixel-card-sm {
-      background: var(--card-cream);
-      border: 2.5px solid var(--warm-wood);
-      border-radius: 12px;
-      box-shadow: 0 3px 0 var(--warm-wood);
-    }
-    .pixel-btn {
-      border: 2.5px solid var(--warm-wood);
-      border-radius: 12px;
-      box-shadow: 0 3px 0 var(--warm-wood);
-      transition: all 0.1s ease;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-      font-weight: bold;
-    }
-    .pixel-btn:active:not(:disabled) {
-      transform: translateY(2px);
-      box-shadow: 0 1px 0 var(--warm-wood);
-    }
-    canvas { image-rendering: pixelated; }
-    .stat-bar-bg {
-      background: #EFE7DA;
-      border: 2px solid var(--warm-wood);
-      border-radius: 999px;
-      height: 11px;
-      overflow: hidden;
-    }
-    .stat-bar-fill { height: 100%; transition: width 0.35s ease; border-radius: 999px; }
-    .px-icon { width: 20px; height: 20px; shape-rendering: crispEdges; flex-shrink: 0; }
-    .px-icon-lg { width: 28px; height: 28px; shape-rendering: crispEdges; flex-shrink: 0; }
-  </style>
+  <link rel="stylesheet" href="./style.css" />
 </head>
-<body class="flex flex-col items-center">
-  <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden bg-[#FFFDF9] border-[2.5px] border-[#5C4B51] rounded-2xl px-4 py-2 text-xs sm:text-sm font-bold shadow-lg max-w-[90%] text-center"></div>
+<body>
+  <div id="toast" class="toast hidden"></div>
 
-  <div class="w-full max-w-5xl flex flex-col gap-3">
-    <header class="pixel-card px-3 py-2.5 flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <div class="w-9 h-9 rounded-xl bg-[#FADCE4] border-2 border-[#5C4B51] flex items-center justify-center" id="header-paw-icon"></div>
+  <div class="app">
+    <header class="pixel-card header">
+      <div class="brand">
+        <div class="brand-icon" id="header-paw-icon"></div>
         <div>
-          <div class="flex items-center gap-1.5">
-            <h1 class="text-base sm:text-lg font-bold">Pixel Paws</h1>
-            <span id="t-subtitle-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-[#E2F0CB] border border-[#5C4B51] font-bold">像素陪伴</span>
+          <div class="brand-title">
+            <h1>Pixel Paws</h1>
+            <span id="t-subtitle-badge" class="badge bg-green">像素陪伴</span>
           </div>
-          <p id="t-iphone-tip" class="text-[11px] text-[#8C737B]">iPhone Safari 点分享 → 添加到主屏幕即可安装</p>
+          <p id="t-iphone-tip" class="tip">iPhone Safari 点分享 → 添加到主屏幕即可安装</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-1.5 flex-wrap">
-        <div class="pixel-card-sm px-2.5 py-1 bg-[#FFF7E0] text-xs font-bold flex items-center gap-1">
-          <span id="coin-icon-slot"></span><span id="ui-coins">120</span>
-        </div>
-        <button id="btn-lang" onclick="App.toggleLang()" class="pixel-btn px-3 py-1.5 bg-[#D4EBF2] text-xs">中文 / EN</button>
-        <button onclick="App.toggleSavePanel()" id="btn-save-panel" class="pixel-btn px-2.5 py-1.5 bg-[#F4ECE1] text-xs">💾 存档</button>
+      <div class="header-actions">
+        <div class="pixel-card-sm coins"><span id="coin-icon-slot"></span><span id="ui-coins">120</span></div>
+        <button id="btn-lang" class="pixel-btn bg-blue">中文 / EN</button>
+        <button id="btn-shop" class="pixel-btn bg-pink">🛍️ 商店</button>
+        <button id="btn-save-panel" class="pixel-btn bg-tan">💾 存档</button>
       </div>
     </header>
 
-    <div id="save-panel" class="hidden pixel-card p-3 bg-[#FFFDF9] flex flex-col gap-2">
-      <div class="flex items-center justify-between">
-        <span id="t-save-title" class="text-xs sm:text-sm font-bold">💾 存档备份与恢复（推荐定期导出到备忘录）</span>
-        <button onclick="App.toggleSavePanel()" class="text-xs px-2 py-0.5 rounded bg-[#F4ECE1] border border-[#5C4B51]">✕</button>
+    <div id="save-panel" class="pixel-card panel hidden">
+      <div class="panel-head">
+        <span id="t-save-title">💾 存档备份与恢复（推荐定期导出到备忘录）</span>
+        <button id="btn-save-close" class="x-btn" aria-label="Close">✕</button>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <button onclick="App.exportSave()" id="btn-export-save" class="pixel-btn px-3 py-1.5 bg-[#E2F0CB] text-xs">📤 导出存档码</button>
-        <button onclick="App.importSave()" id="btn-import-save" class="pixel-btn px-3 py-1.5 bg-[#D4EBF2] text-xs">📥 导入存档码</button>
+      <div class="panel-row">
+        <button id="btn-export-save" class="pixel-btn bg-green">📤 导出存档码</button>
+        <button id="btn-import-save" class="pixel-btn bg-blue">📥 导入存档码</button>
       </div>
-      <textarea id="save-code-box" rows="2" placeholder="点“导出存档码”生成备份，或粘贴之前导出的存档码后点“导入存档码”..." class="w-full text-xs p-2 rounded-xl border-2 border-[#5C4B51] bg-[#FDF8F0] select-text"></textarea>
+      <textarea id="save-code-box" rows="2" class="save-box"></textarea>
     </div>
 
-    <section class="pixel-card p-2.5 flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5" id="species-tabs"></div>
-      <div class="flex items-center gap-1.5">
-        <span id="t-gender-label" class="text-xs font-bold text-[#8C737B]">性别：</span>
-        <button id="btn-gender-female" onclick="App.setGender('female')" class="pixel-btn px-2.5 py-1 text-xs bg-[#FADCE4]">♀ 女生</button>
-        <button id="btn-gender-male" onclick="App.setGender('male')" class="pixel-btn px-2.5 py-1 text-xs bg-[#D4EBF2]">♂ 男生</button>
+    <div id="shop-panel" class="pixel-card panel hidden">
+      <div class="panel-head">
+        <span id="t-shop-title">🛍️ 商店</span>
+        <button id="btn-shop-close" class="x-btn" aria-label="Close">✕</button>
+      </div>
+      <div id="t-shop-hats" class="shop-label">🎩 帽子</div>
+      <div id="shop-hats" class="shop-grid"></div>
+      <div id="t-shop-decor" class="shop-label">🏡 房间装饰</div>
+      <div id="shop-decor" class="shop-grid"></div>
+    </div>
+
+    <section class="pixel-card picker">
+      <div class="tabs" id="species-tabs"></div>
+      <div class="gender">
+        <span id="t-gender-label" class="muted-label">性别：</span>
+        <button id="btn-gender-female" class="pixel-btn bg-pink">♀ 女生</button>
+        <button id="btn-gender-male" class="pixel-btn bg-blue">♂ 男生</button>
       </div>
     </section>
 
-    <main class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
-      <section class="lg:col-span-7 flex flex-col gap-2.5">
-        <div class="pixel-card p-2.5">
-          <div class="flex items-center justify-between mb-2 px-1">
-            <span id="ui-room-badge" class="text-xs sm:text-sm font-bold px-2.5 py-1 rounded-xl bg-[#E2F0CB] border border-[#5C4B51]">🎋 竹林秘境小屋</span>
-            <span id="ui-fav-hint" class="text-[11px] sm:text-xs font-bold text-[#B84A62] bg-[#FFF7E0] px-2.5 py-1 rounded-xl border border-[#5C4B51]">❤️ 最爱：新鲜竹笋</span>
+    <main class="main">
+      <section class="col-scene">
+        <div class="pixel-card scene-card">
+          <div class="scene-head">
+            <span id="ui-room-badge" class="chip bg-green"></span>
+            <span id="ui-fav-hint" class="chip bg-yellow fav-hint"></span>
           </div>
-          <div class="w-full aspect-[4/3] sm:aspect-[16/10] rounded-xl overflow-hidden border-2 border-[#5C4B51] relative bg-[#E8F4EA]">
-            <canvas id="scene-canvas" class="w-full h-full block"></canvas>
-            <div id="speech-bubble" class="hidden absolute top-3 left-1/2 -translate-x-1/2 bg-[#FFFDF9]/95 border-2 border-[#5C4B51] rounded-2xl px-3.5 py-1.5 text-xs sm:text-sm font-bold shadow max-w-[88%] text-center"></div>
+          <div class="scene">
+            <canvas id="scene-canvas"></canvas>
+            <div id="speech-bubble" class="bubble hidden"></div>
+            <div id="game-hud" class="hud hidden">
+              <span class="hud-chip">⏱ <span id="hud-time">30</span></span>
+              <span class="hud-chip">⭐ <span id="hud-score">0</span></span>
+              <button id="btn-quit" class="hud-chip hud-quit" aria-label="Quit">✕</button>
+            </div>
           </div>
         </div>
 
-        <div class="pixel-card p-3 flex flex-col gap-2.5">
-          <div class="flex flex-wrap gap-1.5">
-            <button onclick="Pet.pat()" id="btn-pat" class="pixel-btn px-3 py-1.5 bg-[#FADCE4] text-xs sm:text-sm">✋ 摸摸</button>
-            <button onclick="Pet.play()" id="btn-play" class="pixel-btn px-3 py-1.5 bg-[#E2F0CB] text-xs sm:text-sm">🧶 玩耍</button>
-            <button onclick="Pet.sleep()" id="btn-sleep" class="pixel-btn px-3 py-1.5 bg-[#D4EBF2] text-xs sm:text-sm">💤 休息</button>
+        <div class="pixel-card controls">
+          <div class="actions">
+            <button id="btn-pat" class="pixel-btn bg-pink">✋ 摸摸</button>
+            <button id="btn-play" class="pixel-btn bg-green">🧶 玩耍</button>
+            <button id="btn-sleep" class="pixel-btn bg-blue">💤 休息</button>
           </div>
-          <div id="snacks-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t-2 border-dashed border-[#E5D9C5]"></div>
+          <div id="snacks-grid" class="snacks"></div>
         </div>
       </section>
 
-      <section class="lg:col-span-5 pixel-card p-3.5 flex flex-col gap-3">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <input id="pet-name-input" onchange="Pet.rename(this.value)" maxlength="12" class="text-lg font-bold bg-[#FDF8F0] border-2 border-[#5C4B51] rounded-xl px-2.5 py-0.5 w-32 sm:w-36 text-[#5C4B51] select-text" />
-            <span id="ui-gender-tag" class="text-xs px-2 py-0.5 rounded-lg bg-[#FADCE4] border border-[#5C4B51] font-bold">♀ 女生</span>
+      <section class="pixel-card col-status">
+        <div class="status-head">
+          <div class="name-row">
+            <input id="pet-name-input" maxlength="12" class="name-input" />
+            <span id="ui-gender-tag" class="tag"></span>
           </div>
-          <div class="font-pixel-en text-xs bg-[#FFF7E0] border-2 border-[#5C4B51] px-2.5 py-1 rounded-xl">Lv.<span id="ui-level">1</span></div>
+          <div class="font-pixel-en level">Lv.<span id="ui-level">1</span></div>
         </div>
 
-        <div class="flex flex-col gap-2 text-xs font-bold">
+        <div id="ui-mood" class="mood"></div>
+
+        <div class="bars">
           <div>
-            <div class="flex justify-between mb-0.5"><span id="lbl-exp">✨ 经验</span><span id="val-exp">0/100</span></div>
-            <div class="stat-bar-bg"><div id="bar-exp" class="stat-bar-fill bg-[#F4C95D]" style="width:0%"></div></div>
+            <div class="bar-label"><span id="lbl-exp">✨ 经验</span><span id="val-exp">0/100</span></div>
+            <div class="stat-bar-bg"><div id="bar-exp" class="stat-bar-fill" style="background:#F4C95D"></div></div>
           </div>
           <div>
-            <div class="flex justify-between mb-0.5"><span id="lbl-happy">💖 开心</span><span id="val-happy">80</span></div>
-            <div class="stat-bar-bg"><div id="bar-happy" class="stat-bar-fill bg-[#F59BB2]" style="width:80%"></div></div>
+            <div class="bar-label"><span id="lbl-happy">💖 开心</span><span id="val-happy">80</span></div>
+            <div class="stat-bar-bg"><div id="bar-happy" class="stat-bar-fill" style="background:#F59BB2"></div></div>
           </div>
           <div>
-            <div class="flex justify-between mb-0.5"><span id="lbl-full">🍙 饱腹</span><span id="val-full">75</span></div>
-            <div class="stat-bar-bg"><div id="bar-full" class="stat-bar-fill bg-[#88D498]" style="width:75%"></div></div>
+            <div class="bar-label"><span id="lbl-full">🍙 饱腹</span><span id="val-full">75</span></div>
+            <div class="stat-bar-bg"><div id="bar-full" class="stat-bar-fill" style="background:#88D498"></div></div>
           </div>
           <div>
-            <div class="flex justify-between mb-0.5"><span id="lbl-energy">⚡ 精力</span><span id="val-energy">85</span></div>
-            <div class="stat-bar-bg"><div id="bar-energy" class="stat-bar-fill bg-[#7EC8E3]" style="width:85%"></div></div>
+            <div class="bar-label"><span id="lbl-energy">⚡ 精力</span><span id="val-energy">85</span></div>
+            <div class="stat-bar-bg"><div id="bar-energy" class="stat-bar-fill" style="background:#7EC8E3"></div></div>
+          </div>
+          <div>
+            <div class="bar-label"><span id="lbl-annoy">💢 怒气</span><span id="val-annoy">0</span></div>
+            <div class="stat-bar-bg"><div id="bar-annoy" class="stat-bar-fill" style="background:#E5534B"></div></div>
           </div>
         </div>
 
-        <div class="bg-[#FDF8F0] border-2 border-[#E5D9C5] rounded-xl p-2.5 text-xs">
-          <div id="t-room-desc-title" class="font-bold mb-1">🏡 房间特色</div>
-          <p id="ui-room-desc" class="text-[#8C737B] leading-relaxed"></p>
+        <div class="note-box">
+          <div class="note-head">
+            <span id="t-daily-title" class="note-title">📅 今日任务</span>
+            <button id="btn-gift" class="pixel-btn bg-yellow gift-btn">🎁 领取</button>
+          </div>
+          <ul id="goal-list" class="goals"></ul>
+        </div>
+
+        <div class="note-box">
+          <div id="t-room-desc-title" class="note-title">🏡 房间特色</div>
+          <p id="ui-room-desc" class="note-text"></p>
         </div>
       </section>
     </main>
   </div>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
-      });
-    }
-
-    const PxSVG = {
-      coin: `<svg class="px-icon" viewBox="0 0 16 16"><rect x="4" y="2" width="8" height="12" fill="#F4C95D"/><rect x="2" y="4" width="12" height="8" fill="#F4C95D"/><rect x="5" y="4" width="6" height="8" fill="#FFE699"/><rect x="7" y="5" width="2" height="6" fill="#B8860B"/></svg>`,
-      paw: `<svg class="px-icon" viewBox="0 0 16 16"><rect x="5" y="8" width="6" height="5" fill="#5C4B51"/><rect x="6" y="9" width="4" height="3" fill="#FFFDF9"/><rect x="3" y="5" width="2" height="3" fill="#5C4B51"/><rect x="6" y="3" width="2" height="3" fill="#5C4B51"/><rect x="9" y="3" width="2" height="3" fill="#5C4B51"/><rect x="12" y="5" width="2" height="3" fill="#5C4B51"/></svg>`,
-      item(type) {
-        const map = {
-          bamboo: `<svg class="px-icon-lg" viewBox="0 0 16 16"><rect x="7" y="2" width="2" height="12" fill="#58A85C"/><rect x="5" y="5" width="2" height="2" fill="#78C87C"/><rect x="9" y="8" width="2" height="2" fill="#78C87C"/><rect x="6" y="6" width="4" height="1" fill="#3C7A40"/></svg>`,
-          fish: `<svg class="px-icon-lg" viewBox="0 0 16 16"><rect x="3" y="6" width="8" height="4" fill="#7EC8E3"/><rect x="11" y="5" width="2" height="2" fill="#5C9EAD"/><rect x="11" y="9" width="2" height="2" fill="#5C9EAD"/><rect x="5" y="7" width="1" height="1" fill="#5C4B51"/></svg>`,
-          bone: `<svg class="px-icon-lg" viewBox="0 0 16 16"><rect x="2" y="4" width="3" height="3" fill="#FFFDF9" stroke="#5C4B51" stroke-width="1"/><rect x="2" y="9" width="3" height="3" fill="#FFFDF9" stroke="#5C4B51" stroke-width="1"/><rect x="11" y="4" width="3" height="3" fill="#FFFDF9" stroke="#5C4B51" stroke-width="1"/><rect x="11" y="9" width="3" height="3" fill="#FFFDF9" stroke="#5C4B51" stroke-width="1"/><rect x="4" y="6" width="8" height="4" fill="#FFFDF9"/></svg>`,
-          ball: `<svg class="px-icon-lg" viewBox="0 0 16 16"><rect x="4" y="3" width="8" height="10" fill="#F4C95D"/><rect x="3" y="4" width="10" height="8" fill="#F4C95D"/><rect x="4" y="7" width="8" height="2" fill="#FFFDF9"/></svg>`,
-          berry: `<svg class="px-icon-lg" viewBox="0 0 16 16"><rect x="4" y="5" width="8" height="7" fill="#E86A92"/><rect x="6" y="2" width="4" height="3" fill="#58A85C"/><rect x="6" y="7" width="1" height="1" fill="#FFFDF9"/><rect x="9" y="8" width="1" height="1" fill="#FFFDF9"/></svg>`,
-          cookie: `<svg class="px-icon-lg" viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" fill="#E2A86B"/><rect x="5" y="5" width="2" height="2" fill="#5C4B51"/><rect x="9" y="6" width="2" height="2" fill="#5C4B51"/><rect x="7" y="10" width="2" height="2" fill="#5C4B51"/></svg>`
-        };
-        return map[type] || map.cookie;
-      }
-    };
-
-    const SPECIES = {
-      panda: {
-        id: 'panda',
-        name: { zh: '熊猫', en: 'Panda' },
-        roomName: { zh: '🎋 竹林秘境小屋', en: '🎋 Bamboo Sanctuary' },
-        roomDesc: {
-          zh: '翠绿像素竹林随风摇曳，木屋旁有温热茶几与纸灯笼，安静又治愈。',
-          en: 'Swaying pixel bamboo outside a cozy wooden cabin with warm tea and lanterns.'
-        },
-        favLabel: { zh: '❤️ 最爱：新鲜竹笋', en: '❤️ Fav: Fresh Bamboo' },
-        snacks: [
-          { id: 'bamboo', fav: true, cost: 10, name: { zh: '新鲜竹笋', en: 'Bamboo Shoot' } },
-          { id: 'cookie', fav: false, cost: 8, name: { zh: '甜饼干', en: 'Sweet Cookie' } },
-          { id: 'berry', fav: false, cost: 12, name: { zh: '山林浆果', en: 'Forest Berry' } },
-          { id: 'ball', fav: false, cost: 10, name: { zh: '小皮球', en: 'Play Ball' } }
-        ]
-      },
-      cat: {
-        id: 'cat',
-        name: { zh: '小猫', en: 'Kitten' },
-        roomName: { zh: '🧶 暖心毛线小窝', en: '🧶 Cozy Yarn Hearth' },
-        roomDesc: {
-          zh: '壁炉跳动着温暖像素火光，窗台透进柔光，毛线球与软垫铺满小窝。',
-          en: 'A warm brick fireplace, soft window light, cushions, and yarn balls in a snug den.'
-        },
-        favLabel: { zh: '❤️ 最爱：香脆小鱼干', en: '❤️ Fav: Dried Fish' },
-        snacks: [
-          { id: 'fish', fav: true, cost: 10, name: { zh: '香脆小鱼干', en: 'Dried Fish' } },
-          { id: 'cookie', fav: false, cost: 8, name: { zh: '甜饼干', en: 'Sweet Cookie' } },
-          { id: 'berry', fav: false, cost: 12, name: { zh: '山林浆果', en: 'Forest Berry' } },
-          { id: 'ball', fav: false, cost: 10, name: { zh: '毛线球', en: 'Yarn Ball' } }
-        ]
-      },
-      dog: {
-        id: 'dog',
-        name: { zh: '小狗', en: 'Puppy' },
-        roomName: { zh: '🦴 阳光草坪木屋', en: '🦴 Sunny Lawn Cabin' },
-        roomDesc: {
-          zh: '明媚草坪围着白色栅栏，铺着野餐布与骨头玩具，随时准备撒欢奔跑。',
-          en: 'Bright green lawn with white fences, picnic blanket, and toys ready for fetch.'
-        },
-        favLabel: { zh: '❤️ 最爱：大骨头 & 玩球', en: '❤️ Fav: Bone & Ball' },
-        snacks: [
-          { id: 'bone', fav: true, cost: 10, name: { zh: '香浓大骨头', en: 'Meaty Bone' } },
-          { id: 'ball', fav: true, cost: 10, name: { zh: '弹力玩球', en: 'Bouncy Ball' } },
-          { id: 'cookie', fav: false, cost: 8, name: { zh: '甜饼干', en: 'Sweet Cookie' } },
-          { id: 'fish', fav: false, cost: 10, name: { zh: '小鱼干', en: 'Dried Fish' } }
-        ]
-      },
-      dino: {
-        id: 'dino',
-        name: { zh: '小恐龙', en: 'Dino' },
-        roomName: { zh: '🌿 奇幻蕨类温室', en: '🌿 Fern & Amber Den' },
-        roomDesc: {
-          zh: '巨型像素蕨叶与发光琥珀点缀洞穴，树叶巢穴温暖又充满冒险气息。',
-          en: 'Giant pixel ferns, glowing amber stones, and a leafy nest full of adventure.'
-        },
-        favLabel: { zh: '❤️ 最爱：奇幻树莓', en: '❤️ Fav: Magic Berry' },
-        snacks: [
-          { id: 'berry', fav: true, cost: 12, name: { zh: '奇幻树莓', en: 'Magic Berry' } },
-          { id: 'bamboo', fav: false, cost: 10, name: { zh: '嫩绿叶片', en: 'Tender Leaf' } },
-          { id: 'cookie', fav: false, cost: 8, name: { zh: '甜饼干', en: 'Sweet Cookie' } },
-          { id: 'ball', fav: false, cost: 10, name: { zh: '小皮球', en: 'Play Ball' } }
-        ]
-      }
-    };
-
-    const STORAGE_KEY = 'PIXEL_PAWS_SAVE_V1';
-    const defaultState = () => ({
-      lang: 'zh',
-      coins: 120,
-      activeSpecies: 'panda',
-      pets: {
-        panda: { name: '团子', gender: 'female', level: 1, exp: 0, happy: 80, full: 75, energy: 85, sleeping: false },
-        cat:   { name: '奶糖', gender: 'female', level: 1, exp: 0, happy: 80, full: 75, energy: 85, sleeping: false },
-        dog:   { name: '布丁', gender: 'male',   level: 1, exp: 0, happy: 80, full: 75, energy: 85, sleeping: false },
-        dino:  { name: '小绿', gender: 'male',   level: 1, exp: 0, happy: 80, full: 75, energy: 85, sleeping: false }
-      }
-    });
-
-    let state = loadState();
-    let tick = 0;
-
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return defaultState();
-        const parsed = JSON.parse(raw);
-        return { ...defaultState(), ...parsed, pets: { ...defaultState().pets, ...(parsed.pets || {}) } };
-      } catch {
-        return defaultState();
-      }
-    }
-
-    function saveState() {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-    }
-
-    function showToast(msg) {
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.classList.remove('hidden');
-      clearTimeout(el._t);
-      el._t = setTimeout(() => el.classList.add('hidden'), 2000);
-    }
-
-    function say(msg) {
-      const el = document.getElementById('speech-bubble');
-      el.textContent = msg;
-      el.classList.remove('hidden');
-      clearTimeout(el._t);
-      el._t = setTimeout(() => el.classList.add('hidden'), 2200);
-    }
-
-    const App = {
-      toggleLang() {
-        state.lang = state.lang === 'zh' ? 'en' : 'zh';
-        const pet = state.pets[state.activeSpecies];
-        if (pet.name === '团子' && state.lang === 'en') pet.name = 'Mochi';
-        else if (pet.name === 'Mochi' && state.lang === 'zh') pet.name = '团子';
-        saveState();
-        UI.render();
-      },
-      selectSpecies(id) {
-        state.activeSpecies = id;
-        saveState();
-        UI.render();
-        say(state.lang === 'zh' ? `${SPECIES[id].roomName.zh} 到啦！` : `Welcome to ${SPECIES[id].roomName.en}!`);
-      },
-      setGender(g) {
-        state.pets[state.activeSpecies].gender = g;
-        saveState();
-        UI.render();
-        say(g === 'female' ? (state.lang === 'zh' ? '🎀 戴上蝴蝶结啦！' : '🎀 Cute bow on!') : (state.lang === 'zh' ? '👔 帅气领结登场！' : '👔 Dapper bowtie on!'));
-      },
-      toggleSavePanel() {
-        document.getElementById('save-panel').classList.toggle('hidden');
-      },
-      exportSave() {
-        const box = document.getElementById('save-code-box');
-        box.value = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-        box.focus();
-        box.select();
-        showToast(state.lang === 'zh' ? '已生成存档码，可复制保存到备忘录' : 'Save code generated!');
-      },
-      importSave() {
-        const box = document.getElementById('save-code-box');
-        try {
-          const decoded = JSON.parse(decodeURIComponent(escape(atob(box.value.trim()))));
-          if (!decoded.pets) throw new Error('invalid');
-          state = { ...defaultState(), ...decoded, pets: { ...defaultState().pets, ...decoded.pets } };
-          saveState();
-          UI.render();
-          showToast(state.lang === 'zh' ? '存档恢复成功！' : 'Save restored!');
-        } catch {
-          showToast(state.lang === 'zh' ? '存档码格式不正确' : 'Invalid save code');
-        }
-      }
-    };
-
-    const Pet = {
-      gainExp(pet, pts) {
-        pet.exp += pts;
-        while (pet.exp >= pet.level * 100) {
-          pet.exp -= pet.level * 100;
-          pet.level += 1;
-          state.coins += 25;
-          showToast(state.lang === 'zh' ? `🎉 升到 Lv.${pet.level}！奖励 25 金币` : `🎉 Level Up! Lv.${pet.level} (+25 coins)`);
-        }
-      },
-      rename(val) {
-        const trimmed = val.trim();
-        if (trimmed) state.pets[state.activeSpecies].name = trimmed;
-        saveState();
-        UI.render();
-      },
-      pat() {
-        const pet = state.pets[state.activeSpecies];
-        pet.sleeping = false;
-        pet.happy = Math.min(100, pet.happy + 8);
-        this.gainExp(pet, 12);
-        saveState();
-        UI.render();
-        say(state.lang === 'zh' ? '呼噜呼噜～好舒服呀！' : 'Purr~ That feels so nice!');
-      },
-      play() {
-        const pet = state.pets[state.activeSpecies];
-        if (pet.energy < 10) {
-          showToast(state.lang === 'zh' ? '精力不足，先休息一下吧' : 'Too tired, take a rest first');
-          return;
-        }
-        pet.sleeping = false;
-        pet.energy = Math.max(0, pet.energy - 12);
-        pet.happy = Math.min(100, pet.happy + 12);
-        pet.full = Math.max(0, pet.full - 8);
-        state.coins += 6;
-        this.gainExp(pet, 18);
-        saveState();
-        UI.render();
-        say(state.lang === 'zh' ? '太开心啦！一起玩！' : 'Yay! So much fun!');
-      },
-      sleep() {
-        const pet = state.pets[state.activeSpecies];
-        pet.sleeping = !pet.sleeping;
-        if (pet.sleeping) {
-          pet.energy = Math.min(100, pet.energy + 25);
-          this.gainExp(pet, 10);
-          say(state.lang === 'zh' ? 'Zzz... 晚安...' : 'Zzz... Good night...');
-        } else {
-          say(state.lang === 'zh' ? '睡醒啦，元气满满！' : 'Wide awake and refreshed!');
-        }
-        saveState();
-        UI.render();
-      },
-      useSnack(snack) {
-        const pet = state.pets[state.activeSpecies];
-        if (state.coins < snack.cost) {
-          showToast(state.lang === 'zh' ? '金币不够啦，去玩耍赚点金币吧' : 'Not enough coins! Play to earn more');
-          return;
-        }
-        state.coins -= snack.cost;
-        pet.sleeping = false;
-        const bonus = snack.fav ? 12 : 0;
-        pet.full = Math.min(100, pet.full + 18 + bonus);
-        pet.happy = Math.min(100, pet.happy + 10 + bonus);
-        this.gainExp(pet, 15 + bonus);
-        saveState();
-        UI.render();
-        say(
-          snack.fav
-            ? (state.lang === 'zh' ? `❤️ 哇！最爱吃${snack.name.zh}了！` : `❤️ Yum! Love ${snack.name.en}!`)
-            : (state.lang === 'zh' ? `吃了${snack.name.zh}，好满足！` : `Ate ${snack.name.en}, yummy!`)
-        );
-      }
-    };
-
-    const UI = {
-      render() {
-        const isZh = state.lang === 'zh';
-        const sp = SPECIES[state.activeSpecies];
-        const pet = state.pets[state.activeSpecies];
-
-        document.getElementById('header-paw-icon').innerHTML = PxSVG.paw;
-        document.getElementById('coin-icon-slot').innerHTML = PxSVG.coin;
-        document.getElementById('ui-coins').textContent = state.coins;
-        document.getElementById('btn-lang').textContent = isZh ? '中文 / EN' : 'EN / 中文';
-        document.getElementById('t-subtitle-badge').textContent = isZh ? '像素陪伴' : 'Pixel Pet';
-        document.getElementById('t-iphone-tip').textContent = isZh
-          ? 'iPhone Safari 点分享 → 添加到主屏幕即可安装'
-          : 'iPhone Safari: Share → Add to Home Screen to install';
-
-        document.getElementById('t-save-title').textContent = isZh
-          ? '💾 存档备份与恢复（推荐定期导出到备忘录）'
-          : '💾 Save Backup & Restore (Recommended for Safari)';
-        document.getElementById('btn-export-save').textContent = isZh ? '📤 导出存档码' : '📤 Export Save';
-        document.getElementById('btn-import-save').textContent = isZh ? '📥 导入存档码' : '📥 Import Save';
-
-        const tabs = document.getElementById('species-tabs');
-        tabs.innerHTML = '';
-        Object.values(SPECIES).forEach(item => {
-          const active = item.id === state.activeSpecies;
-          const btn = document.createElement('button');
-          btn.className = `pixel-btn px-2.5 py-1 text-xs shrink-0 ${active ? 'bg-[#F4C95D]' : 'bg-[#FFFDF9]'}`;
-          btn.textContent = isZh ? item.name.zh : item.name.en;
-          btn.onclick = () => App.selectSpecies(item.id);
-          tabs.appendChild(btn);
-        });
-
-        document.getElementById('t-gender-label').textContent = isZh ? '性别：' : 'Gender:';
-        document.getElementById('btn-gender-female').textContent = isZh ? '♀ 女生' : '♀ Girl';
-        document.getElementById('btn-gender-male').textContent = isZh ? '♂ 男生' : '♂ Boy';
-        document.getElementById('btn-gender-female').style.outline = pet.gender === 'female' ? '2.5px solid #5C4B51' : 'none';
-        document.getElementById('btn-gender-male').style.outline = pet.gender === 'male' ? '2.5px solid #5C4B51' : 'none';
-
-        document.getElementById('ui-room-badge').textContent = isZh ? sp.roomName.zh : sp.roomName.en;
-        document.getElementById('ui-fav-hint').textContent = isZh ? sp.favLabel.zh : sp.favLabel.en;
-        document.getElementById('ui-room-desc').textContent = isZh ? sp.roomDesc.zh : sp.roomDesc.en;
-        document.getElementById('t-room-desc-title').textContent = isZh ? '🏡 房间特色' : '🏡 Room Vibe';
-
-        document.getElementById('btn-pat').textContent = isZh ? '✋ 摸摸' : '✋ Pat';
-        document.getElementById('btn-play').textContent = isZh ? '🧶 玩耍' : '🧶 Play';
-        document.getElementById('btn-sleep').textContent = pet.sleeping
-          ? (isZh ? '☀️ 唤醒' : '☀️ Wake')
-          : (isZh ? '💤 休息' : '💤 Sleep');
-
-        const grid = document.getElementById('snacks-grid');
-        grid.innerHTML = '';
-        sp.snacks.forEach(sn => {
-          const card = document.createElement('button');
-          card.className = `pixel-card-sm p-2 flex flex-col items-center gap-1 text-xs relative ${sn.fav ? 'bg-[#FFF7E0]' : 'bg-[#FFFDF9]'}`;
-          card.onclick = () => Pet.useSnack(sn);
-          card.innerHTML = `
-            ${sn.fav ? `<span class="text-[10px] px-1.5 py-0.2 rounded-full bg-[#FADCE4] border border-[#5C4B51] font-bold">${isZh ? '❤️ 最爱' : '❤️ FAV'}</span>` : ''}
-            ${PxSVG.item(sn.id)}
-            <span class="font-bold truncate max-w-full">${isZh ? sn.name.zh : sn.name.en}</span>
-            <span class="text-[11px] text-[#8C737B]">🪙 ${sn.cost}</span>
-          `;
-          grid.appendChild(card);
-        });
-
-        const nameInput = document.getElementById('pet-name-input');
-        if (document.activeElement !== nameInput) nameInput.value = pet.name;
-        const gTag = document.getElementById('ui-gender-tag');
-        gTag.textContent = pet.gender === 'female' ? (isZh ? '♀ 女生' : '♀ Girl') : (isZh ? '♂ 男生' : '♂ Boy');
-        gTag.className = `text-xs px-2 py-0.5 rounded-lg border border-[#5C4B51] font-bold ${pet.gender === 'female' ? 'bg-[#FADCE4]' : 'bg-[#D4EBF2]'}`;
-
-        document.getElementById('ui-level').textContent = pet.level;
-        const maxExp = pet.level * 100;
-        document.getElementById('lbl-exp').textContent = isZh ? '✨ 经验' : '✨ EXP';
-        document.getElementById('val-exp').textContent = `${pet.exp}/${maxExp}`;
-        document.getElementById('bar-exp').style.width = `${Math.min(100, (pet.exp / maxExp) * 100)}%`;
-
-        document.getElementById('lbl-happy').textContent = isZh ? '💖 开心' : '💖 Happy';
-        document.getElementById('val-happy').textContent = pet.happy;
-        document.getElementById('bar-happy').style.width = `${pet.happy}%`;
-
-        document.getElementById('lbl-full').textContent = isZh ? '🍙 饱腹' : '🍙 Full';
-        document.getElementById('val-full').textContent = pet.full;
-        document.getElementById('bar-full').style.width = `${pet.full}%`;
-
-        document.getElementById('lbl-energy').textContent = isZh ? '⚡ 精力' : '⚡ Energy';
-        document.getElementById('val-energy').textContent = pet.energy;
-        document.getElementById('bar-energy').style.width = `${pet.energy}%`;
-      }
-    };
-
-    const canvas = document.getElementById('scene-canvas');
-    const ctx = canvas.getContext('2d');
-
-    function drawPixelScene() {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        canvas.width = Math.round(rect.width * dpr);
-        canvas.height = Math.round(rect.height * dpr);
-      }
-      const w = canvas.width;
-      const h = canvas.height;
-      const spId = state.activeSpecies;
-      const pet = state.pets[spId];
-      const sway = Math.sin(tick * 0.05) * 4;
-      const bob = pet.sleeping ? 0 : Math.abs(Math.sin(tick * 0.08)) * -6;
-
-      if (spId === 'panda') {
-        ctx.fillStyle = '#E8F5E9';
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = '#A5D6A7';
-        ctx.fillRect(0, h * 0.68, w, h * 0.32);
-        [0.12, 0.22, 0.78, 0.88].forEach((bx, idx) => {
-          const x = w * bx + sway * (idx % 2 === 0 ? 1 : -0.7);
-          ctx.fillStyle = '#4CAF50';
-          ctx.fillRect(x, 0, w * 0.035, h * 0.72);
-          ctx.fillStyle = '#2E7D32';
-          for (let y = h * 0.14; y < h * 0.65; y += h * 0.14) ctx.fillRect(x, y, w * 0.035, 3);
-        });
-      } else if (spId === 'cat') {
-        ctx.fillStyle = '#FFF3E0';
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = '#F3D5B5';
-        ctx.fillRect(0, h * 0.7, w, h * 0.3);
-        const fx = w * 0.76, fy = h * 0.42, fw = w * 0.16, fh = h * 0.3;
-        ctx.fillStyle = '#BC6C25';
-        ctx.fillRect(fx, fy, fw, fh);
-        ctx.fillStyle = '#3D2B1F';
-        ctx.fillRect(fx + fw * 0.2, fy + fh * 0.35, fw * 0.6, fh * 0.65);
-        ctx.fillStyle = '#FF7043';
-        ctx.fillRect(fx + fw * 0.35, fy + fh * 0.55 + Math.sin(tick * 0.2) * 3, fw * 0.3, fh * 0.35);
-      } else if (spId === 'dog') {
-        ctx.fillStyle = '#D4EBF2';
-        ctx.fillRect(0, 0, w, h * 0.65);
-        ctx.fillStyle = '#B7E4C7';
-        ctx.fillRect(0, h * 0.65, w, h * 0.35);
-        ctx.fillStyle = '#E5989B';
-        ctx.fillRect(w * 0.1, h * 0.44, w * 0.2, h * 0.22);
-        ctx.fillStyle = '#FFFDF9';
-        for (let x = w * 0.65; x < w * 0.95; x += 14) ctx.fillRect(x, h * 0.54, 8, h * 0.13);
-      } else {
-        ctx.fillStyle = '#E6F4EA';
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = '#C8E6C9';
-        ctx.fillRect(0, h * 0.7, w, h * 0.3);
-        ctx.fillStyle = '#2D6A4F';
-        ctx.fillRect(w * 0.08 + sway * 0.6, h * 0.15, w * 0.04, h * 0.55);
-        ctx.fillStyle = '#F4C95D';
-        ctx.fillRect(w * 0.82, h * 0.48, w * 0.07, h * 0.12);
-      }
-
-      const cx = w * 0.5;
-      const cy = h * 0.62 + bob;
-      const s = Math.min(w, h) * 0.14;
-
-      ctx.fillStyle = spId === 'panda' ? '#FFFFFF' : spId === 'cat' ? '#FFE5B4' : spId === 'dog' ? '#F4A261' : '#74C69D';
-      ctx.fillRect(cx - s * 0.65, cy - s * 0.45, s * 1.3, s * 1.05);
-
-      ctx.fillStyle = spId === 'panda' ? '#3B2F2F' : spId === 'cat' ? '#F4A261' : spId === 'dog' ? '#BC6C25' : '#F4C95D';
-      ctx.fillRect(cx - s * 0.65, cy - s * 0.75, s * 0.32, s * 0.32);
-      ctx.fillRect(cx + s * 0.33, cy - s * 0.75, s * 0.32, s * 0.32);
-
-      if (spId === 'panda') {
-        ctx.fillStyle = '#3B2F2F';
-        ctx.fillRect(cx - s * 0.42, cy - s * 0.18, s * 0.26, s * 0.24);
-        ctx.fillRect(cx + s * 0.16, cy - s * 0.18, s * 0.26, s * 0.24);
-      }
-
-      ctx.fillStyle = '#2B2125';
-      if (pet.sleeping) {
-        ctx.fillRect(cx - s * 0.35, cy - s * 0.06, s * 0.2, 3);
-        ctx.fillRect(cx + s * 0.15, cy - s * 0.06, s * 0.2, 3);
-      } else {
-        ctx.fillRect(cx - s * 0.3, cy - s * 0.12, 5, 5);
-        ctx.fillRect(cx + s * 0.22, cy - s * 0.12, 5, 5);
-      }
-
-      if (pet.gender === 'female') {
-        ctx.fillStyle = '#FF758F';
-        ctx.fillRect(cx - s * 0.22, cy - s * 0.62, s * 0.18, s * 0.14);
-        ctx.fillRect(cx + s * 0.04, cy - s * 0.62, s * 0.18, s * 0.14);
-        ctx.fillStyle = '#FFB3C1';
-        ctx.fillRect(cx - s * 0.05, cy - s * 0.59, s * 0.1, s * 0.08);
-      } else {
-        ctx.fillStyle = '#4EA8DE';
-        ctx.fillRect(cx - s * 0.24, cy + s * 0.42, s * 0.18, s * 0.12);
-        ctx.fillRect(cx + s * 0.06, cy + s * 0.42, s * 0.18, s * 0.12);
-        ctx.fillStyle = '#90E0EF';
-        ctx.fillRect(cx - s * 0.06, cy + s * 0.44, s * 0.12, s * 0.08);
-      }
-
-      tick++;
-      requestAnimationFrame(drawPixelScene);
-    }
-
-    canvas.addEventListener('click', () => Pet.pat());
-    UI.render();
-    drawPixelScene();
-  </script>
+  <script src="./game.js"></script>
 </body>
 </html>
