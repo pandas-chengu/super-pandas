@@ -1484,6 +1484,50 @@ window.addEventListener('pagehide', saveState);
 if (window.ResizeObserver) new ResizeObserver(fit).observe(canvas);
 window.addEventListener('resize', fit);
 
+/* ---------- noticing a new version ----------
+   A page left open, or an app kept on the home screen, goes on running the
+   code it started with. So the page remembers what its own files looked like
+   when it loaded, asks the server now and then whether they have changed, and
+   loads itself again when they have. The game is saved first and nothing is
+   lost; a round of catch is never interrupted. */
+
+const OWN_FILES = [location.pathname, './style.css', './game.js'];
+let ownBuild = null;
+
+async function buildOf(cache) {
+  const texts = await Promise.all(OWN_FILES.map(async url => {
+    const res = await fetch(url, cache ? { cache } : undefined);
+    if (!res.ok) throw new Error(String(res.status));
+    return res.text();
+  }));
+  let h = 0x811c9dc5; // FNV-1a over all three files
+  for (const ch of texts.join('\n')) h = Math.imul(h ^ ch.codePointAt(0), 0x01000193) >>> 0;
+  return h.toString(16).padStart(8, '0');
+}
+
+async function checkForUpdate() {
+  if (ownBuild === null || game || document.hidden) return;
+  let latest;
+  try { latest = await buildOf('no-cache'); } catch { return; } // offline: ask again later
+  if (latest === ownBuild || game) return;
+  // Once per new version: if loading again did not bring it, do not go round in circles.
+  try {
+    if (sessionStorage.getItem('reloadedFor') === latest) return;
+    sessionStorage.setItem('reloadedFor', latest);
+  } catch {}
+  saveState();
+  showToast(tr('有新版本，正在更新…', 'New version, updating…'));
+  setTimeout(() => location.reload(), 900);
+}
+
+buildOf().then(b => {
+  ownBuild = b;
+  $('build-label').textContent = `build ${b}`;
+  checkForUpdate();
+}).catch(() => {});
+setInterval(checkForUpdate, 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkForUpdate(); });
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});

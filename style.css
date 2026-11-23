@@ -183,6 +183,8 @@ body.playing .controls, body.playing .picker { opacity: 0.5; pointer-events: non
 .goals li { display: flex; justify-content: space-between; gap: 8px; color: var(--warm-wood-light); }
 .goals li.done { color: #3C7A40; font-weight: bold; }
 
+.build { text-align: center; font-size: 10px; line-height: 14px; color: var(--warm-wood-light); opacity: 0.7; }
+
 .toast {
   position: fixed; top: calc(16px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 50;
   background: var(--card-cream); border: 2.5px solid var(--warm-wood); border-radius: 16px; padding: 8px 16px;
